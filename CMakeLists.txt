@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(MulticoreRP2040 MulticoreRP2040.c )
+add_executable(MulticoreRP2040 MulticoreRP2040.c lib/ssd1306.c lib/aht20.c lib/bmp280.c)
 
 pico_set_program_name(MulticoreRP2040 "MulticoreRP2040")
 pico_set_program_version(MulticoreRP2040 "0.1")
@@ -46,7 +46,10 @@ pico_enable_stdio_usb(MulticoreRP2040 1)
 
 # Add the standard library to the build
 target_link_libraries(MulticoreRP2040
-        pico_stdlib)
+        pico_stdlib
+        pico_multicore
+        hardware_i2c
+        )
 
 # Add the standard include files to the build
 target_include_directories(MulticoreRP2040 PRIVATE
