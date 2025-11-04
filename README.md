@@ -1,6 +1,6 @@
 # Processamento Multicore com RP2040 na BitDogLab
 
-__Projeto Final da Capacitação em Sistemas Embarcados__<br>
+__Atividade Multicore__<br>
 Repositório foi criado com o intuito de desenvolver um projeto empregando o uso dos dois núcleos disponíveis no RP2040.<br>
 
 __Responsável pelo desenvolvimento:__
