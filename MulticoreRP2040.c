@@ -23,8 +23,8 @@
 #define led_blue 12
 #define led_green 11
 
-volatile uint32_t pressao = 0;
-volatile uint32_t umidade = 0;
+volatile uint32_t pressao = 0;          //variáveis globais que armazenam o dado de leitura atual
+volatile uint32_t umidade = 0;          //modificadas apenas no core 1
 
 //enum para permitir diferenciações de dados na fifo
 typedef enum{
@@ -34,8 +34,8 @@ typedef enum{
 
 void init_leds();
 void show_display(uint32_t valorPres, sensores valorHum);     //passa como parâmetro os dados dos sensores
-void push_fifo_sensor(sensores sensor, uint32_t leitura);
-void core1_interrupt_handler();
+void push_fifo_sensor(sensores sensor, uint32_t leitura);     //passa os dados em ordem de acordo com o sensor
+void core1_interrupt_handler();                               //interrupção para realizar leitura da FIFO no core 1
 
 
 void core1_entry(){  //recebe dados e mostra no display e aciona leds
@@ -69,6 +69,7 @@ void core1_entry(){  //recebe dados e mostra no display e aciona leds
 
     while (true)
     {
+        gpio_put(led_red,1);                                //aciona o led vermelho na execução do core 1
         //verifica se há dados disponível para leitura
         char str_pressao[5]; //para a pressão
         sprintf(str_pressao,"%d",pressao);
@@ -81,16 +82,18 @@ void core1_entry(){  //recebe dados e mostra no display e aciona leds
         ssd1306_rect(&ssd, 3, 1, 122, 61, cor, !cor);      // Desenha um retângulo ok
         ssd1306_line(&ssd, 3, 33, 123, 33, cor);           // Desenha uma linha
 
-        ssd1306_draw_string(&ssd, "Umi.:", 10, 15);  
+        ssd1306_draw_string(&ssd, "Umi.:", 10, 15);         //exibe o valor lido para umidade
         ssd1306_draw_string(&ssd, str_umidade, 60, 15); 
         ssd1306_draw_string(&ssd, "%", 100, 15); 
 
-        ssd1306_draw_string(&ssd, "Pres.:", 10, 45); 
+        ssd1306_draw_string(&ssd, "Pres.:", 10, 45);        //exibe o valor lido para pressão
         ssd1306_draw_string(&ssd, str_pressao, 60, 45);
         ssd1306_draw_string(&ssd, "kPa", 90, 45);
 
         ssd1306_send_data(&ssd);
-        sleep_ms(700);
+        gpio_put(led_red,0);
+        sleep_ms(500);
+        
     }
     
 
@@ -129,6 +132,8 @@ int main()  //main do core 0, realiza a leitura dos sensores
 
     while (true) {
         
+        gpio_put(led_green,1);                  //aciona o led verde na execução do core 0
+
         //leitura bmp
         bmp280_read_raw(I2C_PORT_SENSOR, &temperatura_bmp, &pressao_bmp);
         int32_t convert_temperatura_bmp = bmp280_convert_temp(temperatura_bmp, &params);
@@ -147,8 +152,8 @@ int main()  //main do core 0, realiza a leitura dos sensores
         {
             printf("\nErro na leitura do AHT10!\n");
         };
-
-        sleep_ms(1000); //pausa porque os dados não mudam tão rapidamente
+        gpio_put(led_green,0);
+        sleep_ms(200); //pausa porque os dados não mudam tão rapidamente
 
     }
 }
@@ -184,10 +189,10 @@ void core1_interrupt_handler(){
     uint32_t valorpres;
     uint32_t valorhum;
 
-    while(multicore_fifo_rvalid()){
-        sensores sensor = multicore_fifo_pop_blocking();
-        if(sensor==BMP280_PRES){
-            pressao = multicore_fifo_pop_blocking();
+    while(multicore_fifo_rvalid()){                     //verifica se há dados para leitura
+        sensores sensor = multicore_fifo_pop_blocking();    //retira o primeiro valor da fila
+        if(sensor==BMP280_PRES){                            //se for BMP, retira o valor seguinte e 
+            pressao = multicore_fifo_pop_blocking();        //salva na variável de pressão
             printf("Pressão: %d\n", pressao);
         }else{
             umidade = multicore_fifo_pop_blocking();
