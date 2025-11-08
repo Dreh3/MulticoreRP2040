@@ -8,7 +8,7 @@ Andressa Sousa Fonseca
 
 ## Detalhamento Do Projeto
 
-### 1. Funcionalidade do Sistema
+### Funcionalidade do Sistema
 
 No projeto desenvolvido, são utilizados dois sensores, o BMP280 e o AHT20, responsáveis por capturar a pressão e a umidade do ambiente, respectivamente. A leitura contínua 
 dos sensores é realizada pelo core 0 do RP2040. Visando o paralelismo do processamento, o núcleo core 1 foi utilizado para realizar a exibição dos dados de leitura. Nesse aspecto, foi
